@@ -3,19 +3,16 @@
 # Generate APP_KEY if not set
 [ -z "$APP_KEY" ] && php artisan key:generate --force
 
-# Wait for database
+# Wait for database to be ready
 while ! php artisan db:monitor > /dev/null 2>&1; do
-  echo "Waiting for database..."
+  echo "Waiting for database connection..."
   sleep 1
 done
 
-# Run migrations
+# Run migrations and optimize
 php artisan migrate --force
+php artisan optimize
 
-# Optimize for production
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Start server
-php artisan serve --host=0.0.0.0 --port=8080
+# Start PHP server on port 8080
+echo "Starting server on 0.0.0.0:8080"
+exec php artisan serve --host=0.0.0.0 --port=8080
