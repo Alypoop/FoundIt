@@ -1,0 +1,18 @@
+{
+  "build": {
+    "builder": "nixpacks",
+    "config": {
+      "startCmd": "./start.sh",
+      "nixpacks": {
+        "pkgs": [
+          "php82",
+          "php82Extensions.curl",
+          "php82Extensions.mbstring",
+          "php82Extensions.xml",
+          "php82Extensions.mysql",
+          "nodejs-18_x"
+        ]
+      }
+    }
+  }
+}
