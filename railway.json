@@ -6,13 +6,22 @@
       "nixpacks": {
         "pkgs": [
           "php82",
+          "php82Extensions.mysqli",
+          "php82Extensions.pdo_mysql",
           "php82Extensions.curl",
           "php82Extensions.mbstring",
           "php82Extensions.xml",
-          "php82Extensions.mysql",
           "nodejs-18_x"
         ]
       }
     }
+  },
+  "deploy": {
+    "ports": [
+      {
+        "port": 8080,
+        "protocol": "http"
+      }
+    ]
   }
 }
