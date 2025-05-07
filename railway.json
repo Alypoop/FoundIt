@@ -2,7 +2,7 @@
   "build": {
     "builder": "nixpacks",
     "config": {
-      "startCmd": "./start.sh",
+      "startCmd": "php artisan serve --host=0.0.0.0 --port=8080",
       "nixpacks": {
         "pkgs": [
           "php82",
@@ -22,6 +22,11 @@
         "port": 8080,
         "protocol": "http"
       }
+    ],
+    "predeploy": [
+      "php artisan key:generate --force",
+      "php artisan migrate --force",
+      "php artisan optimize"
     ]
   }
 }
