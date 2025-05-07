@@ -1,0 +1,32 @@
+{
+  "build": {
+    "builder": "nixpacks",
+    "config": {
+      "startCmd": "php artisan serve --host=0.0.0.0 --port=8080",
+      "nixpacks": {
+        "pkgs": [
+          "php82",
+          "php82Extensions.mysqli",
+          "php82Extensions.pdo_mysql",
+          "php82Extensions.curl",
+          "php82Extensions.mbstring",
+          "php82Extensions.xml",
+          "nodejs-18_x"
+        ]
+      }
+    }
+  },
+  "deploy": {
+    "ports": [
+      {
+        "port": 8080,
+        "protocol": "http"
+      }
+    ],
+    "predeploy": [
+      "php artisan key:generate --force",
+      "php artisan migrate --force",
+      "php artisan optimize"
+    ]
+  }
+}
