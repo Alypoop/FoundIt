@@ -9,6 +9,10 @@ RUN apt-get update && apt-get install -y \
     zip \
     git \
     unzip \
+    curl \
+    gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd pdo pdo_mysql
 
@@ -18,9 +22,13 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
 
+RUN npm install && npm run build
+
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 8888
 
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8888
+CMD bash -c "php artisan migrate --force && \
+    if [ \$(php artisan db:seed:status | grep 'No' | wc -l) -gt 0 ]; then php artisan db:seed --force; fi && \
+    php artisan serve --host=0.0.0.0 --port=8888"
