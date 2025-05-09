@@ -25,15 +25,10 @@ class AppServiceProvider extends ServiceProvider
             return $user->usertype == 'admin';
         });
 
-        View::composer('components.layout', function ($view) {
-            if (Auth::check()) {
-                $user = Auth::user();
-                $profileImageUrl = (new class {
-                    use S3UrlHelper;
-                })->getTemporaryUrl($user->profile, 60);
-
-                $view->with('profileImageUrl', $profileImageUrl);
-            }
-        });
+        View::composer([
+            'components.layout',
+            'components.navbar',
+            'profile.*',
+        ], ProfileComposer::class);
     }
 }
