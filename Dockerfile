@@ -20,6 +20,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY . .
 
+RUN composer require league/flysystem-aws-s3-v3
+
 RUN composer install --no-dev --optimize-autoloader
 
 RUN composer dump-autoload
