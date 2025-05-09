@@ -2,6 +2,7 @@ FROM php:8.2-fpm
 
 WORKDIR /var/www/html
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -16,29 +17,27 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd pdo pdo_mysql
 
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# First copy only composer files
+# Copy only composer files first for better caching
 COPY composer.json composer.lock ./
 
-# Install dependencies first
-RUN composer install --no-dev --no-scripts --no-autoloader
+# Install dependencies (including dev dependencies for now)
+RUN composer install --no-scripts --no-autoloader
 
-# Then require additional packages
-RUN composer require league/flysystem-aws-s3-v3 --no-scripts
-
-# Now copy the rest of the application
+# Copy the rest of the application
 COPY . .
 
-# Complete the installation
+# Now run the full installation
 RUN composer install --no-dev --optimize-autoloader
 
-RUN composer dump-autoload
-
+# Build frontend assets
 RUN npm install && npm run build
 
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 8888
 
