@@ -18,10 +18,19 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# First copy only composer files
+COPY composer.json composer.lock ./
+
+# Install dependencies first
+RUN composer install --no-dev --no-scripts --no-autoloader
+
+# Then require additional packages
+RUN composer require league/flysystem-aws-s3-v3 --no-scripts
+
+# Now copy the rest of the application
 COPY . .
 
-RUN composer require league/flysystem-aws-s3-v3
-
+# Complete the installation
 RUN composer install --no-dev --optimize-autoloader
 
 RUN composer dump-autoload
