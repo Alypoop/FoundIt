@@ -280,7 +280,7 @@ class ItemsTableSeeder extends Seeder
                     'id' => 35,
                     'created_at' => '2025-04-24 08:47:26',
                     'updated_at' => '2025-04-24 08:47:27',
-                    'user_id' => 3,
+                    'user_id' => 4,
                     'title' => 'Portable Fan',
                     'photo_img' => 'photo_img/35-680a6b1ed254c.jpg',
                     'lost_date' => '2025-04-22',
