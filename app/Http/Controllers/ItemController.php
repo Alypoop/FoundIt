@@ -45,23 +45,21 @@ class ItemController extends Controller
 
         // Handle the image upload only if a file was uploaded
         if ($request->hasFile('photo_img')) {
-            $filename = $newItem->id . "-" . uniqid() . ".jpg";
+            $filename = $item->id . "-" . uniqid() . ".jpg";
 
             $manager = new ImageManager(new Driver()); // Instantiate ImageManager
             $image = $manager->read($request->file('photo_img')->getRealPath()); // Read the uploaded image
             $imgData = $image->cover(960, 1280)->toJpeg(); // Resize and encode to jpg
 
-            // Store the image in the 'public' disk
+            // Store the new image in the 'photo_img/' folder on S3 (Backblaze B2)
             Storage::disk('s3')->put('photo_img/' . $filename, $imgData);
 
-            // Update the item with the image path
-            $newItem->photo_img = 'photo_img/' . $filename;
-            $newItem->save();
-
+            // Update the item with the new image path
+            $item->photo_img = 'photo_img/' . $filename;
+            $item->save();
         }
 
-        // Redirect to the new item's page with a success message
-        return redirect("/item/{$newItem->id}")->with('success', 'New Lost Item Posted');
+        return back()->with('success', 'Item Updated');
     }
 
     public function viewsingleItem(Item $item, User $user)
