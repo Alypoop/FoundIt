@@ -14,6 +14,8 @@ use Illuminate\Auth\Events\Registered;
 
 class UserController extends Controller
 {
+    use S3UrlHelper;
+
     public function register(Request $request)
 {
     $incomingFields = $request->validate([
