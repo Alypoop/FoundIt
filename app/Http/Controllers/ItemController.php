@@ -52,7 +52,7 @@ class ItemController extends Controller
             $imgData = $image->cover(960, 1280)->toJpeg(); // Resize and encode to jpg
 
             // Store the image in the 'public' disk
-            Storage::disk('public')->put('photo_img/' . $filename, $imgData);
+            Storage::disk('s3')->put('photo_img/' . $filename, $imgData);
 
             // Update the item with the image path
             $newItem->photo_img = 'photo_img/' . $filename;
@@ -154,9 +154,9 @@ class ItemController extends Controller
         return view('search', compact('items'));
     }
 
-    
 
-    
+
+
     public function compareWithImage(Request $request)
 {
     $request->validate([
@@ -165,9 +165,9 @@ class ItemController extends Controller
     ]);
 
     $image = $request->file('image');
-    $filename = uniqid() . '-' . $image->getClientOriginalName(); 
+    $filename = uniqid() . '-' . $image->getClientOriginalName();
     $destinationPath = public_path('storage/photo_img');
-    $image->move($destinationPath, $filename); 
+    $image->move($destinationPath, $filename);
     $fullUploadedPath = $destinationPath . '/' . $filename;
 
     \Log::info("File moved to: {$fullUploadedPath}");
@@ -279,7 +279,7 @@ class ItemController extends Controller
         $histories = \App\Models\ItemHistory::with('item')->latest()->get();
         return view('all-history', compact('histories'));
     }
-    
+
 
 }
 

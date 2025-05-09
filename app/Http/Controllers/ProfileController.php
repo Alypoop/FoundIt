@@ -15,10 +15,10 @@ use Intervention\Image\Drivers\Gd\Driver;
 class ProfileController extends Controller
 {
     public function profile(User $user)
-    {        
+    {
         return view('profile-post', ['profile' => $user->profile, 'username' => $user->username, 'user' => $user, 'items' => $user->items()->latest()->get(), 'postCount' => $user->items()->count() ]);
     }
-    
+
     public function editmyProfile(User $user)
     {
         $user = Auth::user();
@@ -39,8 +39,8 @@ class ProfileController extends Controller
     // Check if there are changes
     $hasChanges = $incomingFields['first_name'] !== $user->first_name ||
                   $incomingFields['last_name'] !== $user->last_name ||
-                  $incomingFields['phone'] !== $user->phone || 
-                  $incomingFields['address'] !== $user->address || 
+                  $incomingFields['phone'] !== $user->phone ||
+                  $incomingFields['address'] !== $user->address ||
                   $request->hasFile('profile');
 
     if ($hasChanges) {
@@ -53,7 +53,7 @@ class ProfileController extends Controller
             $imgData = $image->cover(120, 120)->toJpeg(); // Resize and encode to jpg
 
             // Store the image in the 'public' disk
-            Storage::disk('public')->put('profiles/' . $filename, $imgData);
+            Storage::disk('s3')->put('profiles/' . $filename, $imgData);
 
             $oldProfile = $user->profile;
 
@@ -63,7 +63,7 @@ class ProfileController extends Controller
 
             // Delete the old profile image if it exists and is not the fallback image
             if ($oldProfile && $oldProfile !== 'profiles/fallback-profile.jpg') {
-                Storage::disk('public')->delete($oldProfile);
+                Storage::disk('s3')->delete($oldProfile);
             }
         }
 
@@ -100,7 +100,7 @@ class ProfileController extends Controller
         $user->save();
 
         return redirect('edit-profile')->with('success', 'Password updated successfully!');
-        
+
     }
 
     public function changedp(Request $request)
@@ -117,7 +117,7 @@ class ProfileController extends Controller
         if ($user->profile) {
             // Delete the profile picture from the storage (assuming stored in the 'public/profile_pictures' directory)
             $profilePath = public_path('/storage/' . $user->profile);
-            
+
             if (file_exists($profilePath)) {
                 unlink($profilePath); // Deletes the file from the storage
             }
