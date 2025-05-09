@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Hash;
 use App\Traits\S3UrlHelper;
 use Illuminate\Auth\Events\Registered;
 
-
 class UserController extends Controller
 {
     use S3UrlHelper;
