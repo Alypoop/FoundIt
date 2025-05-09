@@ -13,7 +13,6 @@ use Illuminate\Auth\Events\Registered;
 
 class UserController extends Controller
 {
-    use S3UrlHelper;
 
     public function register(Request $request)
 {
@@ -68,28 +67,22 @@ class UserController extends Controller
         return redirect('/');
     }
 
-    use App\Traits\S3UrlHelper;
-
     public function showCorrectHomePage()
     {
         if (auth()->check()) {
-            // Eager-load the 'user' relationship
             $items = Item::with('user')->latest()->paginate(8);
 
-            // Generate temporary URLs for images
             foreach ($items as $item) {
-                // Generate temporary URL for the item's photo
                 if ($item->photo_img) {
                     $item->photo_img_url = (new class {
                         use S3UrlHelper;
-                    })->getTemporaryUrl($item->photo_img, 60); // Valid for 60 minutes
+                    })->getTemporaryUrl($item->photo_img, 60);
                 }
 
-                // Generate temporary URL for the user's profile image
                 if ($item->user && $item->user->profile) {
                     $item->user->profile_url = (new class {
                         use S3UrlHelper;
-                    })->getTemporaryUrl($item->user->profile, 60); // Valid for 60 minutes
+                    })->getTemporaryUrl($item->user->profile, 60);
                 }
             }
 
