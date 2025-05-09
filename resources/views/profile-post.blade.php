@@ -17,7 +17,7 @@
       </div>
       <div class="d-flex justify-content-between align-items-center">
         <h2>
-          <img class="avatar-small" src="/storage/{{$profile}}" />{{$username}}
+          <img class="avatar-small" src="{{ $profileImageUrl }}" />{{$username}}
          @if(auth()->user()->username === $username)
          <a class="btn btn-sm btn-master mr-2" href="/edit-profile">Edit My Profile</a>
          @endif
