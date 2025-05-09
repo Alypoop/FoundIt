@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use App\Traits\S3UrlHelper;
 use Illuminate\Auth\Events\Registered;
 
 
@@ -67,10 +67,31 @@ class UserController extends Controller
         return redirect('/');
     }
 
+    use App\Traits\S3UrlHelper;
+
     public function showCorrectHomePage()
     {
         if (auth()->check()) {
-            $items = Item::latest()->paginate(8); // Fetch all items from the database
+            // Eager-load the 'user' relationship
+            $items = Item::with('user')->latest()->paginate(8);
+
+            // Generate temporary URLs for images
+            foreach ($items as $item) {
+                // Generate temporary URL for the item's photo
+                if ($item->photo_img) {
+                    $item->photo_img_url = (new class {
+                        use S3UrlHelper;
+                    })->getTemporaryUrl($item->photo_img, 60); // Valid for 60 minutes
+                }
+
+                // Generate temporary URL for the user's profile image
+                if ($item->user && $item->user->profile) {
+                    $item->user->profile_url = (new class {
+                        use S3UrlHelper;
+                    })->getTemporaryUrl($item->user->profile, 60); // Valid for 60 minutes
+                }
+            }
+
             return view('homepage-feed', ['items' => $items]);
         } else {
             return view('home');
@@ -114,7 +135,7 @@ class UserController extends Controller
 
     // If there are changes, update the user
     if ($hasChanges) {
-        
+
 
         $user->update($incomingFields);
         return redirect('/users')->with('success', 'User Successfully Updated.');
@@ -138,7 +159,7 @@ class UserController extends Controller
 
     public function newUser(Request $request)
     {
-       
+
             $incomingFields = $request->validate
             (
                 [
@@ -146,14 +167,14 @@ class UserController extends Controller
                     'last_name' => ['required'],
                     'username' => ['required', 'unique:users,username'],
                     'email' => ['required', 'unique:users,email', 'email', 'regex:/^[a-zA-Z0-9._%+-]+@tsu\.edu\.ph$/'],
-                    
+
                     'address' => 'nullable',
                     'phone' => 'nullable',
                     'password' => 'confirmed',
                     'usertype' => ['required', 'in:admin,user']
                 ]
             );
-    
+
             User::create($incomingFields);
             return redirect('users')->with('success', 'User Created');
     }
@@ -163,7 +184,7 @@ class UserController extends Controller
         $user = User::find($user->id);
         return view('edit-password', compact('user'));
     }
-    
+
     public function updatedPassword(Request $request, User $user)
     {
         $incomingFields = $request->validate([
@@ -181,7 +202,7 @@ class UserController extends Controller
         $user->save();
 
         return redirect('users')->with('success', 'Password updated successfully!');
-        
+
     }
 
 }
