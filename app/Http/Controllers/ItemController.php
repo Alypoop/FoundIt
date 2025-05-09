@@ -36,7 +36,6 @@ class ItemController extends Controller
         $incomingFields['postedby'] = auth()->user()->username;
 
         // Prepare incoming fields with authenticated user ID
-        $incomingFields['user_id'] = auth()->id(); // Ensure user_id is present
         $incomingFields['title'] = strip_tags($incomingFields['title']);
         $incomingFields['markings'] = strip_tags($incomingFields['markings']);
 
@@ -45,7 +44,7 @@ class ItemController extends Controller
 
         // Handle the image upload only if a file was uploaded
         if ($request->hasFile('photo_img')) {
-            $filename = $item->id . "-" . uniqid() . ".jpg";
+            $filename = $newItem->id . "-" . uniqid() . ".jpg"; // Use $newItem instead of $item
 
             $manager = new ImageManager(new Driver()); // Instantiate ImageManager
             $image = $manager->read($request->file('photo_img')->getRealPath()); // Read the uploaded image
@@ -55,11 +54,11 @@ class ItemController extends Controller
             Storage::disk('s3')->put('photo_img/' . $filename, $imgData);
 
             // Update the item with the new image path
-            $item->photo_img = 'photo_img/' . $filename;
-            $item->save();
+            $newItem->photo_img = 'photo_img/' . $filename;
+            $newItem->save();
         }
 
-        return back()->with('success', 'Item Updated');
+        return back()->with('success', 'Item Created Successfully');
     }
 
     public function viewsingleItem(Item $item, User $user)
