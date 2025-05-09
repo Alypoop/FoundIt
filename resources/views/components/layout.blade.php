@@ -14,7 +14,7 @@
     @vite(['resources/css/app.css'])
   </head>
   <body>
-    
+
 
         @auth
 
@@ -27,8 +27,8 @@
               <a href="/users" class="text-white mr-2 header-search-icon" title="Users" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-users" aria-hidden="true"></i></a>
               <a href="/itemhistory" class="text-white mr-2 header-search-icon" title="History Log" data-toggle="tooltip" data-placement="bottom"><i  class="bi bi-clipboard-minus-fill" aria-hidden="true"></i></a>
               @endcan
-              <a href="/profile/{{auth()->user()->username}}" class="mr-2"><img title="My Profile" data-toggle="tooltip" data-placement="bottom" style="width: 32px; height: 32px; border-radius: 16px" src="/storage/{{auth()->user()->profile}}" /></a>
-              
+              <a href="/profile/{{auth()->user()->username}}" class="mr-2"><img title="My Profile" data-toggle="tooltip" data-placement="bottom" style="width: 32px; height: 32px; border-radius: 16px" src="{{ $profileImageUrl }}" /></a>
+
               <a class="btn btn-sm btn-master mr-2" href="/create-item">Post a Found Item</a>
               <form action="/logout" method="POST" class="d-inline">
                 @csrf
@@ -38,7 +38,7 @@
           </div>
         </header>
         <!-- header ends here -->
-        
+
 
         @else
 
