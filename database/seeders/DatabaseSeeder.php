@@ -1,0 +1,25 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
+{
+    public function run(): void
+
+        if (app()->environment(['local', 'staging'])) {
+            $this->call([
+                UsersTableSeeder::class,
+                ItemsTableSeeder::class,
+                ItemHistoriesTableSeeder::class,
+            ]);
+        } else {
+            $this->call([
+                UsersTableSeeder::class,
+                ItemsTableSeeder::class,
+                ItemHistoriesTableSeeder::class,
+            ]);
+        }
+    }
+}
