@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use App\Http\View\Composers\ProfileComposer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,15 +21,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::define('userPage', function($user)
-        {
+        Gate::define('userPage', function($user) {
             return $user->usertype == 'admin';
         });
 
-        View::composer([
-            'components.layout',
-            'components.navbar',
-            'profile.*',
-        ], ProfileComposer::class);
+        View::composer('*', function ($view) {
+            if (Auth::check()) {
+                $user = Auth::user();
+                $profileImageUrl = (new class {
+                    use \App\Helpers\S3UrlHelper;
+                })->getTemporaryUrl($user->profile, 60);
+
+                $view->with('profileImageUrl', $profileImageUrl);
+            }
+        });
     }
 }
