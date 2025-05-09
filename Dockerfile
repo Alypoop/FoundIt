@@ -22,6 +22,8 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
 
+RUN composer dump-autoload
+
 RUN npm install && npm run build
 
 RUN chown -R www-data:www-data /var/www/html
@@ -29,6 +31,8 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 8888
 
-CMD bash -c "php artisan migrate --force && \
-    if [ \$(php artisan db:seed:status | grep 'No' | wc -l) -gt 0 ]; then php artisan db:seed --force; fi && \
+CMD bash -c "php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan migrate --force && \
+    php artisan db:seed --force --verbose && \
     php artisan serve --host=0.0.0.0 --port=8888"

@@ -9,7 +9,13 @@ class ItemsTableSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('items')->insert([
+        try {
+            if (DB::table('items')->count() > 0) {
+                $this->command->info('Items already exist, skipping seeding.');
+                return;
+            }
+
+            DB::table('items')->insert([
                 [
                     'id' => 16,
                     'created_at' => '2025-04-24 06:50:14',
@@ -357,8 +363,24 @@ class ItemsTableSeeder extends Seeder
                     'user_id' => 2,
                     'title' => 'Eye liner',
                     'photo_img' => 'photo_img/39-680b8ef633491.jpg',
-                    'lost_date' =>
-                ],
-        ]);
+                    'lost_date' => '2025-04-24',
+                    'category' => 'Make-up Essentials',
+                    'markings' => 'Black eye liner',
+                    'status' => 'Unclaimed',
+                    'bin' => null,
+                    'issued_by' => null,
+                    'issued_date' => null,
+                    'received_by' => null,
+                    'received_date' => null,
+                    'postedby' => 'Caly',
+                    'location' => 'TSU Main',
+                    'claimed_by' => null,
+                ]
+            ]);
+
+            $this->command->info('Items seeded successfully.');
+        } catch (\Exception $e) {
+            $this->command->error('Error seeding items: ' . $e->getMessage());
+        }
     }
 }
