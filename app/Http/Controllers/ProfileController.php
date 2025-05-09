@@ -26,80 +26,88 @@ class ProfileController extends Controller
     public function editmyProfile(User $user)
     {
         $user = Auth::user();
-        return view('edit-profile', compact('user'));
+
+        $profileImageUrl = $this->getTemporaryUrl($user->profile, 60);
+
+        return view('edit-profile', compact('user', 'profileImageUrl'));
     }
 
     public function editedmyProfile(Request $request, User $user)
-    {
-        // Validate the incoming request
-        $incomingFields = $request->validate([
-            'first_name' => ['required'],
-            'last_name' => ['required'],
-            'phone' => ['nullable', 'string', 'max:15'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'profile' => ['nullable', 'image', 'max:3000']
-        ]);
+{
+    // Validate the incoming request
+    $incomingFields = $request->validate([
+        'first_name' => ['required'],
+        'last_name' => ['required'],
+        'phone' => ['nullable', 'string', 'max:15'],
+        'address' => ['nullable', 'string', 'max:255'],
+        'profile' => ['nullable', 'image', 'max:3000']
+    ]);
 
-        // Check if there are changes
-        $hasChanges = $incomingFields['first_name'] !== $user->first_name ||
-                      $incomingFields['last_name'] !== $user->last_name ||
-                      $incomingFields['phone'] !== $user->phone ||
-                      $incomingFields['address'] !== $user->address ||
-                      $request->hasFile('profile');
+    // Check if there are changes
+    $hasChanges = $incomingFields['first_name'] !== $user->first_name ||
+                  $incomingFields['last_name'] !== $user->last_name ||
+                  $incomingFields['phone'] !== $user->phone ||
+                  $incomingFields['address'] !== $user->address ||
+                  $request->hasFile('profile');
 
-        if ($hasChanges) {
-            // Handle profile image upload
-            if ($request->hasFile('profile')) {
-                try {
-                    $filename = $user->id . "-" . uniqid() . ".jpg";
-                    $filepath = 'profiles/' . $filename;
+    if ($hasChanges) {
+        // Handle profile image upload
+        if ($request->hasFile('profile')) {
+            try {
+                $filename = $user->id . "-" . uniqid() . ".jpg";
+                $filepath = 'profiles/' . $filename;
 
-                    $manager = new ImageManager(new Driver());
-                    $image = $manager->read($request->file('profile')->getRealPath());
-                    $imgData = $image->cover(120, 120)->toJpeg();
+                $manager = new ImageManager(new Driver());
+                $image = $manager->read($request->file('profile')->getRealPath());
+                $imgData = $image->cover(120, 120)->toJpeg();
 
-                    // Store the image directly to S3
-                    $uploaded = Storage::disk('s3')->put($filepath, $imgData);
+                // Store the image directly to B2
+                $uploaded = Storage::disk('s3')->put($filepath, $imgData);
 
-                    if ($uploaded) {
-                        $oldProfile = $user->profile;
+                if ($uploaded) {
+                    // Log success for debugging
+                    \Log::info("Profile image uploaded successfully: " . $filepath);
 
-                        // Update user profile path
-                        $user->profile = $filepath;
+                    $oldProfile = $user->profile;
 
-                        // Delete the old profile image if it exists and is not the fallback image
-                        if ($oldProfile && $oldProfile !== 'profiles/fallback-profile.jpg') {
+                    // Update user profile path
+                    $user->profile = $filepath;
+
+                    // Delete the old profile image if it exists and is not the fallback image
+                    if ($oldProfile && $oldProfile !== 'profiles/fallback-profile.jpg') {
+                        try {
                             Storage::disk('s3')->delete($oldProfile);
+                        } catch (\Exception $e) {
+                            \Log::warning("Could not delete old profile image: " . $e->getMessage());
                         }
-                    } else {
-                        return redirect('/edit-profile')->with('error', 'Could not upload profile image. Please try again.');
                     }
-                } catch (\Exception $e) {
-                    return redirect('/edit-profile')->with('error', 'Error uploading profile image: ' . $e->getMessage());
+                } else {
+                    \Log::error("Failed to upload profile image to B2");
+                    return redirect('/edit-profile')->with('error', 'Could not upload profile image. Please try again.');
                 }
+            } catch (\Exception $e) {
+                \Log::error("Error uploading profile image: " . $e->getMessage());
+                return redirect('/edit-profile')->with('error', 'Error uploading profile image: ' . $e->getMessage());
             }
-
-            // Update other fields
-            $user->update([
-                'first_name' => $incomingFields['first_name'],
-                'last_name' => $incomingFields['last_name'],
-                'phone' => $incomingFields['phone'],
-                'address' => $incomingFields['address'],
-            ]);
-
-            // Save any profile picture changes
-            $user->save();
         }
 
-        // Generate a temporary URL for the updated profile image
-        $profileImageUrl = $this->getTemporaryUrl($user->profile, 60); // Valid for 60 minutes
-
-        // Redirect back to the edit profile page with the updated profile image
-        return redirect('/edit-profile')->with([
-            'success' => 'Profile Successfully Updated.',
-            'profileImageUrl' => $profileImageUrl
+        // Update other fields
+        $user->update([
+            'first_name' => $incomingFields['first_name'],
+            'last_name' => $incomingFields['last_name'],
+            'phone' => $incomingFields['phone'],
+            'address' => $incomingFields['address'],
         ]);
+
+        // Save any profile picture changes
+        $user->save();
+
+        return redirect('/edit-profile')->with('success', 'Profile Successfully Updated.');
     }
+
+    // If no changes, simply redirect without message
+    return redirect('/edit-profile')->with('info', 'No changes have been made.');
+}
 
     public function changeProfilePass(User $user)
     {
