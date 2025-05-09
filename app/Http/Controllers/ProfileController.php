@@ -31,9 +31,9 @@ class ProfileController extends Controller
     $incomingFields = $request->validate([
         'first_name' => ['required'],
         'last_name' => ['required'],
-        'phone' => ['nullable', 'string', 'max:15'], // Adjust phone validation
-        'address' => ['nullable', 'string', 'max:255'], // Adjust address validation
-        'profile' => ['nullable', 'image', 'max:3000'] // Ensure this is an image file
+        'phone' => ['nullable', 'string', 'max:15'],
+        'address' => ['nullable', 'string', 'max:255'],
+        'profile' => ['nullable', 'image', 'max:3000']
     ]);
 
     // Check if there are changes
@@ -46,29 +46,54 @@ class ProfileController extends Controller
     if ($hasChanges) {
         // Handle profile image upload
         if ($request->hasFile('profile')) {
-            $filename = $user->id . "-" . uniqid() . ".jpg";
+            try {
+                $filename = $user->id . "-" . uniqid() . ".jpg";
+                $filepath = 'profiles/' . $filename;
 
-            $manager = new ImageManager(new Driver()); // Instantiate ImageManager
-            $image = $manager->read($request->file('profile')->getRealPath()); // Read the uploaded image
-            $imgData = $image->cover(120, 120)->toJpeg(); // Resize and encode to jpg
+                $manager = new ImageManager(new Driver());
+                $image = $manager->read($request->file('profile')->getRealPath());
+                $imgData = $image->cover(120, 120)->toJpeg();
 
-            // Store the image in the 'public' disk
-            Storage::disk('s3')->put('profiles/' . $filename, $imgData);
+                // Store the image directly to B2
+                $uploaded = Storage::disk('s3')->put($filepath, $imgData);
 
-            $oldProfile = $user->profile;
+                if ($uploaded) {
+                    // Log success for debugging
+                    \Log::info("Profile image uploaded successfully: " . $filepath);
 
-            // Update user profile path
-            $user->profile = 'profiles/' . $filename;
-            $user->save();
+                    $oldProfile = $user->profile;
 
-            // Delete the old profile image if it exists and is not the fallback image
-            if ($oldProfile && $oldProfile !== 'profiles/fallback-profile.jpg') {
-                Storage::disk('s3')->delete($oldProfile);
+                    // Update user profile path
+                    $user->profile = $filepath;
+
+                    // Delete the old profile image if it exists and is not the fallback image
+                    if ($oldProfile && $oldProfile !== 'profiles/fallback-profile.jpg') {
+                        try {
+                            Storage::disk('s3')->delete($oldProfile);
+                        } catch (\Exception $e) {
+                            \Log::warning("Could not delete old profile image: " . $e->getMessage());
+                        }
+                    }
+                } else {
+                    \Log::error("Failed to upload profile image to B2");
+                    return redirect('/edit-profile')->with('error', 'Could not upload profile image. Please try again.');
+                }
+            } catch (\Exception $e) {
+                \Log::error("Error uploading profile image: " . $e->getMessage());
+                return redirect('/edit-profile')->with('error', 'Error uploading profile image: ' . $e->getMessage());
             }
         }
 
         // Update other fields
-        $user->update($incomingFields);
+        $user->update([
+            'first_name' => $incomingFields['first_name'],
+            'last_name' => $incomingFields['last_name'],
+            'phone' => $incomingFields['phone'],
+            'address' => $incomingFields['address'],
+        ]);
+
+        // Save any profile picture changes
+        $user->save();
 
         return redirect('/edit-profile')->with('success', 'Profile Successfully Updated.');
     }

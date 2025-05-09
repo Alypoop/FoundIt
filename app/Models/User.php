@@ -33,12 +33,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected function profile(): Attribute
     {
-        return Attribute::make(get: function($value) 
+        return Attribute::make(get: function($value)
         {
            return $value ? '' . $value : 'profiles/fallback-profile.jpg';
         });
     }
-    
+
     // protected function profile(): Attribute
     // {
     //     return Attribute::make(
