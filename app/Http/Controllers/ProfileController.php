@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
+use App\Traits\S3UrlHelper;
 
 
 class ProfileController extends Controller
