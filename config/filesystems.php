@@ -49,12 +49,12 @@ return [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_REGION'), // Corrected to AWS_REGION for consistency
+            'region' => env('AWS_REGION'),
             'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'), // Optional if you want to define a custom URL
-            'endpoint' => env('AWS_ENDPOINT'), // Backblaze's endpoint
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true), // Ensure it's true for Backblaze B2
-            'throw' => false, // Handle errors gracefully (false) instead of throwing
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true),
+            'throw' => false,
         ],
 
     ],
