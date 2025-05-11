@@ -10,7 +10,7 @@
         @endif
 
         <div class="row justify-content-center">
-            
+
             @foreach ($items as $item)
 
             @if ($errors->any())
@@ -22,13 +22,13 @@
             @endif
 
                 <div class="card m-2" style="width: 18rem;">
-                    <img src="{{ asset('storage/' . $item->photo_img) }}" class="card-img-top" alt="...">
+                    <img src="{{ session("comparison_{$item->id}.matched") }}" class="card-img-top" alt="...">
                     <div class="card-body">
                         <h5 class="card-title">
                             <a href="{{ route('items.compare.view', ['id' => $item->id]) }}">
                                 <h5 class="card-title">{{ $item->title }}</h5>
                             </a>
-                            
+
                           </h5>
                                                   <p class="card-text">
                             <strong>Author:</strong> {{ $item->user->username }}<br>

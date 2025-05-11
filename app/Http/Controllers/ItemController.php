@@ -13,8 +13,6 @@ use Intervention\Image\Drivers\Gd\Driver;
 
 class ItemController extends Controller
 {
-
-
     public function showCreateItem(User $user)
     {
         return view('post-item', ['user' => $user]);
@@ -28,7 +26,7 @@ class ItemController extends Controller
             'lost_date' => 'required',
             'category' => 'required',
             'markings' => 'required',
-           'photo_img' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:3000'],
+            'photo_img' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:3000'],
             'location' => 'required'
         ]);
 
@@ -44,18 +42,80 @@ class ItemController extends Controller
 
         // Handle the image upload only if a file was uploaded
         if ($request->hasFile('photo_img')) {
-            $filename = $newItem->id . "-" . uniqid() . ".jpg"; // Use $newItem instead of $item
+            try {
+                $filename = $newItem->id . "-" . uniqid() . ".jpg";
+                $uploadedFile = $request->file('photo_img');
 
-            $manager = new ImageManager(new Driver()); // Instantiate ImageManager
-            $image = $manager->read($request->file('photo_img')->getRealPath()); // Read the uploaded image
-            $imgData = $image->cover(960, 1280)->toJpeg(); // Resize and encode to jpg
+                // Read image with PHP's native functions to avoid WebP issues
+                $imageContents = file_get_contents($uploadedFile->getRealPath());
+                $sourceImage = imagecreatefromstring($imageContents);
 
-            // Store the new image in the 'photo_img/' folder on S3 (Backblaze B2)
-            Storage::disk('s3')->put('photo_img/' . $filename, $imgData);
+                if ($sourceImage) {
+                    // Create a new image with desired dimensions
+                    $width = 960;
+                    $height = 1280;
 
-            // Update the item with the new image path
-            $newItem->photo_img = 'photo_img/' . $filename;
-            $newItem->save();
+                    // Get original dimensions
+                    $originalWidth = imagesx($sourceImage);
+                    $originalHeight = imagesy($sourceImage);
+
+                    // Calculate aspect ratios
+                    $originalRatio = $originalWidth / $originalHeight;
+                    $targetRatio = $width / $height;
+
+                    // Determine dimensions for cropping
+                    if ($originalRatio > $targetRatio) {
+                        // Original image is wider
+                        $newWidth = intval($originalHeight * $targetRatio);
+                        $newHeight = $originalHeight;
+                        $sourceX = intval(($originalWidth - $newWidth) / 2);
+                        $sourceY = 0;
+                    } else {
+                        // Original image is taller
+                        $newWidth = $originalWidth;
+                        $newHeight = intval($originalWidth / $targetRatio);
+                        $sourceX = 0;
+                        $sourceY = intval(($originalHeight - $newHeight) / 2);
+                    }
+
+                    // Create new true color image
+                    $targetImage = imagecreatetruecolor($width, $height);
+
+                    // Copy and resize part of an image with resampling
+                    imagecopyresampled(
+                        $targetImage, $sourceImage,
+                        0, 0, $sourceX, $sourceY,
+                        $width, $height, $newWidth, $newHeight
+                    );
+
+                    // Capture the image data
+                    ob_start();
+                    imagejpeg($targetImage, null, 85);
+                    $imgData = ob_get_contents();
+                    ob_end_clean();
+
+                    // Free up memory
+                    imagedestroy($sourceImage);
+                    imagedestroy($targetImage);
+
+                    // Store the new image in the 'photo_img/' folder on S3 (Backblaze B2)
+                    Storage::disk('s3')->put('photo_img/' . $filename, $imgData);
+
+                    // Update the item with the new image path
+                    $newItem->photo_img = 'photo_img/' . $filename;
+                    $newItem->save();
+                } else {
+                    throw new \Exception("Failed to create image from string");
+                }
+            } catch (\Exception $e) {
+                // Log error and use a simpler approach as fallback
+                \Log::error('Image processing error: ' . $e->getMessage());
+
+                // Create a simpler version using only the upload functionality
+                $path = $request->file('photo_img')->store('photo_img', 's3');
+                $newItem->photo_img = $path;
+                $newItem->save();
+            }
         }
 
         return back()->with('success', 'Item Created Successfully');
@@ -120,8 +180,6 @@ class ItemController extends Controller
             ]);
         }
 
-        // (Optional) Handle image update...
-
         return back()->with('success', 'Item Updated');
     }
 
@@ -151,9 +209,6 @@ class ItemController extends Controller
         return view('search', compact('items'));
     }
 
-
-
-
     public function compareWithImage(Request $request)
 {
     $request->validate([
@@ -161,27 +216,22 @@ class ItemController extends Controller
         'matched_items' => 'required|array',
     ]);
 
+    // Store the uploaded image in S3
     $image = $request->file('image');
     $filename = uniqid() . '-' . $image->getClientOriginalName();
-    $destinationPath = public_path('storage/photo_img');
-    $image->move($destinationPath, $filename);
-    $fullUploadedPath = $destinationPath . '/' . $filename;
+    $path = $image->storeAs('photo_img', $filename, 's3'); // Store in S3
+    $fullUploadedPath = Storage::disk('s3')->url($path); // Get the public URL for the uploaded image
 
-    \Log::info("File moved to: {$fullUploadedPath}");
-
-    if (!file_exists($fullUploadedPath)) {
-        \Log::error("Uploaded image not found at path: {$fullUploadedPath}");
-        return view('search-comparison-results', [
-            'items' => collect(), // empty collection
-            'results' => [],
-        ])->withErrors(['image' => 'No Match Found']);
-    }
+    \Log::info("File uploaded to S3: {$fullUploadedPath}");
 
     $results = [];
     $validItemIds = [];
 
     foreach ($request->matched_items as $itemId => $imgPath) {
-        $itemImagePath = public_path("storage/" . $imgPath);
+        // Generate a temporary URL for the matched item image
+        $itemImagePath = (new class {
+            use S3UrlHelper;
+        })->getTemporaryUrl($imgPath, 60); // Generate a temporary URL valid for 60 minutes
 
         try {
             $response = Http::attach('img1', file_get_contents($fullUploadedPath), 'uploaded.jpg')
@@ -197,13 +247,12 @@ class ItemController extends Controller
                     $results[$itemId] = $data;
 
                     session()->put("comparison_{$itemId}", [
-                        'uploaded' => asset("storage/photo_img/{$filename}"),
-                        'matched' => asset("storage/{$imgPath}"),
+                        'uploaded' => $fullUploadedPath,
+                        'matched' => $itemImagePath,
                         'result' => $data,
                         'match_image_url' => $data['match_image_url'] ?? null,
                     ]);
                 }
-
             } else {
                 \Log::error("Comparison failed for item ID {$itemId}: " . $response->body());
                 $results[$itemId] = ['error' => 'Comparison failed'];
@@ -222,15 +271,12 @@ class ItemController extends Controller
         ])->withErrors(['image' => 'No Match Found']);
     }
 
+    // Fetch items with user data
     $items = Item::whereIn('id', $validItemIds)->with('user')->get();
 
+    // Return the view with items and results
     return view('search-comparison-results', compact('items', 'results'));
 }
-
-
-
-
-
 
     public function viewComparison($id)
     {
@@ -264,7 +310,6 @@ class ItemController extends Controller
         return redirect('/')->with('success', 'Please claim the item at the Dean\'s Office.');
     }
 
-
     public function viewHistory(Item $item)
     {
         $histories = $item->histories()->latest()->get();
@@ -276,8 +321,4 @@ class ItemController extends Controller
         $histories = \App\Models\ItemHistory::with('item')->latest()->get();
         return view('all-history', compact('histories'));
     }
-
-
 }
-
-
