@@ -62,7 +62,7 @@
                     {{ in_array($loc, request()->input('location', [])) ? 'checked' : '' }}>
                     <label class="form-check-label" for="location-{{ Str::slug($loc, '-') }}">{{ $loc }}</label>
                 </div>
-            @endforeach 
+            @endforeach
             </div>
 
 
@@ -83,7 +83,7 @@
             </div>
         </form>
     @endif
-    
+
 
 
 
@@ -92,20 +92,20 @@
             <div class="row justify-content-center">
                 @foreach ($items as $item)
                     <div class="col-md-4 mb-4 d-flex justify-content-center">
-                        <div class="card" style="width: 18rem;">                
+                        <div class="card" style="width: 18rem;">
                             <div class="card-body">
                                 <a href="/item/{{ $item->id }}"><h5 class="card-title">{{ $item->title }}</h5></a>
                                 <p class="card-text">
-                                    <strong>Author:</strong> 
-                                    <img class="avatar-tiny" src="/storage/{{ $item->user->profile ?? 'profile/default.jpg' }}" />
+                                    <strong>Author:</strong>
+                                    <img class="avatar-tiny" src="{{ $item->user->profile_url ?? asset('storage/profile/default.jpg') }}" />
                                     {{ $item->user->username }}<br>
                                     <strong>Found Date:</strong> {{ $item->lost_date }}<br>
                                     <strong>Category:</strong> {{ $item->category }}<br>
                                     <strong>Location:</strong> {{ $item->location }}
                                 </p>
                                 <p><textarea readonly class="form-control mb-2" rows="3" readonly style="height: 50px; width: 100%; overflow-y: auto; background-color: #e2e8f0; border: none; resize: none; padding: 5px; border-radius: 5px;">{{ $item->markings }}</textarea></p>
-                                @if ($item->photo_img)
-                                    <img src="/storage/{{ $item->photo_img }}" alt="Item image" class="img-fluid">
+                                @if ($item->photo_img_url)
+                                    <img src="{{ $item->photo_img_url }}" alt="Item image" class="img-fluid">
                                 @endif
                             </div>
                         </div>
@@ -119,7 +119,7 @@
         </div>
     @endif
 
-   
+
 
 
 
@@ -129,20 +129,20 @@
             const form = document.getElementById("searchForm");
             const checkboxes = form.querySelectorAll("input[type='checkbox']");
             const imageSearchForm = document.getElementById("imageSearchForm");
-    
+
             function toggleImageSearchForm() {
                 const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
                 const hasResults = {{ $items->count() > 0 ? 'true' : 'false' }};
-    
+
                 if (isAnyChecked && hasResults) {
                     imageSearchForm.classList.remove("d-none");
                 } else {
                     imageSearchForm.classList.add("d-none");
                 }
             }
-    
+
             toggleImageSearchForm(); // on page load
-    
+
             checkboxes.forEach(cb => cb.addEventListener("change", toggleImageSearchForm));
         });
     </script>
@@ -156,5 +156,5 @@
         });
     }
     </script>
-    
+
 </x-layout>

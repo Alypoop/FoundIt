@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Intervention\Image\ImageManager;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
+use App\Traits\S3UrlHelper;
 
 class ItemController extends Controller
 {
@@ -183,31 +184,46 @@ class ItemController extends Controller
         return back()->with('success', 'Item Updated');
     }
 
-    public function search(Request $request)
-    {
-        $categories = $request->input('category', []);
-        $locations = $request->input('location', []);
-        $keyword = $request->input('keyword');
+ public function search(Request $request)
+{
+    $categories = $request->input('category', []);
+    $locations = $request->input('location', []);
+    $keyword = $request->input('keyword');
 
-        $items = Item::with('user')
-            ->when($keyword, function ($query, $keyword) {
-                $query->where(function ($subQuery) use ($keyword) {
-                    $subQuery->where('title', 'LIKE', "%$keyword%")
-                            ->orWhere('markings', 'LIKE', "%$keyword%")
-                            ->orWhere('lost_date', 'LIKE', "%$keyword%");
-                });
-            })
-            ->when($categories, function ($query, $categories) {
-                $query->whereIn('category', $categories);
-            })
-            ->when($locations, function ($query, $locations) {
-                $query->whereIn('location', $locations);
-            })
-            ->whereNotIn('status', ['Claimed', 'To Be Claimed', 'Disposed']) // 👈 Exclude these statuses
-            ->get();
+    $items = Item::with('user')
+        ->when($keyword, function ($query, $keyword) {
+            $query->where(function ($subQuery) use ($keyword) {
+                $subQuery->where('title', 'LIKE', "%$keyword%")
+                        ->orWhere('markings', 'LIKE', "%$keyword%")
+                        ->orWhere('lost_date', 'LIKE', "%$keyword%");
+            });
+        })
+        ->when($categories, function ($query, $categories) {
+            $query->whereIn('category', $categories);
+        })
+        ->when($locations, function ($query, $locations) {
+            $query->whereIn('location', $locations);
+        })
+        ->whereNotIn('status', ['Claimed', 'To Be Claimed', 'Disposed']) // Exclude these statuses
+        ->get();
 
-        return view('search', compact('items'));
+    // Generate temporary URLs for images
+    foreach ($items as $item) {
+        if ($item->photo_img) {
+            $item->photo_img_url = (new class {
+                use S3UrlHelper;
+            })->getTemporaryUrl($item->photo_img, 60); // Valid for 60 minutes
+        }
+
+        if ($item->user && $item->user->profile) {
+            $item->user->profile_url = (new class {
+                use S3UrlHelper;
+            })->getTemporaryUrl($item->user->profile, 60); // Valid for 60 minutes
+        }
     }
+
+    return view('search', compact('items'));
+}
 
     public function compareWithImage(Request $request)
 {
