@@ -33,7 +33,7 @@ class CompareController extends Controller
     }
 
     // ✅ Flask API URL
-    $flaskUrl = 'http://127.0.0.1:5050/compare';
+    $flaskUrl = 'https://algo-production-c395.up.railway.app/compare';
 
     // ✅ Send images as multipart/form-data
     $response = Http::attach(

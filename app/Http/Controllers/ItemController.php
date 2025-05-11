@@ -28,7 +28,7 @@ class ItemController extends Controller
             'lost_date' => 'required',
             'category' => 'required',
             'markings' => 'required',
-            'photo_img' => ['required', 'image', 'max:3000'],
+           'photo_img' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:3000'],
             'location' => 'required'
         ]);
 
