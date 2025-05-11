@@ -1,11 +1,11 @@
 <x-layout>
     <link rel="stylesheet" href="/upload.css" />
 
-   
+
 
     <form action="/post-item" method="POST" enctype="multipart/form-data">
         @csrf
-        <div class="upload-container">   
+        <div class="upload-container">
             <a class="justify-content-center rounded mr-5" title="Go Back" href="/">
                 <i class="fa fa-arrow-left" aria-hidden="true"></i> Go back to Home
             </a>
@@ -17,7 +17,7 @@
                         <label for="photo_img">
                             @error('photo_img')
                             <p class="m-0 small alert alert-danger shadow-sm">Photo is required</p>
-                            @enderror    
+                            @enderror
                             <img src="https://img.icons8.com/ios-filled/50/ffffff/camera--v1.png" alt="Upload Picture">
                             <p>Upload Picture</p>
                         </label>
@@ -25,7 +25,7 @@
                         <p id="file-name" style="margin-top: 10px; font-size: 0.9em; color: #555;"></p> <!-- File name display -->
                     </div>
                 </div>
-                
+
                 <!-- Middle column: Form Inputs -->
                 <div class="col-md-4">
                     <div class="mb-3">
@@ -34,18 +34,18 @@
                         <p class="m-0 small alert alert-danger shadow-sm">{{$message}}</p>
                         @enderror
                         <input value="{{old('title')}}" required type="text" id="title" name="title" class="form-control" placeholder="Enter Title">
-                   
+
                     </div>
-    
+
                     <div class="mb-3">
                         <label for="lost_date" class="form-label">Date Found:</label>
                          @error('lost_date')
                         <p class="m-0 small alert alert-danger shadow-sm">{{$message}}</p>
                         @enderror
                         <input value="{{old('lost_date')}}" required type="date" id="lost_date" name="lost_date" class="form-control" placeholder="Enter date">
-                        
+
                     </div>
-        
+
                     <div class="mb-3">
                         <label for="category" class="form-label">Category:</label>
                         @error('category')
@@ -60,7 +60,7 @@
                             <option>Others</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="category" class="form-label">Location found:</label>
                         @error('location')
@@ -73,9 +73,9 @@
                             <option value="TSU Lucinda" {{ old('location') == 'TSU Lucinda' ? 'selected' : '' }}>TSU Lucinda</option>
                         </select>
                     </div>
-        
+
                 </div>
-        
+
                 @can('view', $user)
                 <!-- Right column: Additional Form Inputs -->
                 <div class="col-md-4">
@@ -95,22 +95,22 @@
                         <label for="bin" class="form-label">Storage Bin:</label>
                         <input type="text" id="bin" name="bin" class="form-control" placeholder="Enter bin">
                     </div>
-        
+
                     <div class="mb-3">
                         <label for="issuedBy" class="form-label">Issued By:</label>
                         <input type="text" id="issuedBy" name="issuedBy" class="form-control" placeholder="Enter issuer">
                     </div>
-        
+
                     <div class="mb-3">
                         <label for="issued_date" class="form-label">Issued Date:</label>
                         <input type="date" id="issued_date" name="issued_date" class="form-control" placeholder="Enter issue date">
                     </div>
-        
+
                     <div class="mb-3">
                         <label for="received_by" class="form-label">Received By:</label>
                         <input type="text" id="received_by" name="received_by" class="form-control" placeholder="Enter receiver">
                     </div>
-        
+
                     <div class="mb-3">
                         <label for="received_date" class="form-label">Receive Date:</label>
                         <input type="date" id="received_date" name="received_date" class="form-control" placeholder="Enter receive date">
@@ -118,7 +118,7 @@
                 </div>
                 @endcan
             </div>
-        
+
             <!-- New row for Body Content -->
             <div class="row g-3">
                 <div class="col-md-8 offset-md-4">
@@ -131,30 +131,35 @@
                     </div>
                 </div>
             </div>
-            
+
             <button type="submit" class="upload-btn mt-3">Upload</button>
         </div>
     </form>
-    
+
     <script>
         // Get today's date in YYYY-MM-DD format
         const today = new Date().toISOString().split('T')[0];
-        
+
         // Set the max attribute to today for both date inputs
         document.getElementById('issued_date').setAttribute('max', today);
         document.getElementById('received_date').setAttribute('max', today);
         document.getElementById('lost_date').setAttribute('max', today);
     </script>
 
-    <script>
-        // Existing date-related code...
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const photoInput = document.getElementById('photo_img');
+        const fileNameDisplay = document.getElementById('file-name');
 
-        // File input name display
-        document.getElementById('photo_img').addEventListener('change', function(){
-            const fileName = this.files[0] ? this.files[0].name : '';
-            document.getElementById('file-name').textContent = fileName;
-        });
-    </script>
+        if (photoInput && fileNameDisplay) {
+            photoInput.addEventListener('change', function () {
+                const fileName = this.files[0] ? this.files[0].name : '';
+                fileNameDisplay.textContent = fileName;
+            });
+        }
+    });
+</script>
+
 
 
 </x-layout>
