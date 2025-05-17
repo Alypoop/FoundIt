@@ -61,6 +61,23 @@ class UserController extends Controller
         return redirect('/')->with('failure', 'Invalid Username or Password');
     }
 
+    public function resendVerification(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email|exists:users,email',
+    ]);
+
+    $user = \App\Models\User::where('email', $request->email)->first();
+
+    if ($user->hasVerifiedEmail()) {
+        return back()->with('message', 'Email already verified.');
+    }
+
+    $user->sendEmailVerificationNotification();
+
+    return back()->with('message', 'Verification email resent!');
+}
+
     public function logout()
     {
         auth()->logout();

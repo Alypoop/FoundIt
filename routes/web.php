@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 // REGISTER USER
 Route::get('/', [UserController::class, 'showCorrectHomePage'])->name('login');
 Route::post('/register', [UserController::class, 'register']);
+Route::post('/resend-verification', [UserController::class, 'resendVerification'])->name('verification.resend');
 // LOGIN LOGOUT USER
 Route::post('/login', [UserController::class, 'login']);
 Route::post('/logout', [UserController::class, 'logout'])->middleware(mustbeLoggedIn::Class);

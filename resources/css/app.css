@@ -409,3 +409,39 @@ textarea.tall-textarea {
   .btn btn-success btn-sm mt-2 {
     margin-top: 10px; 
   }
+
+  .lg-profile-image {
+    width: 128px;
+    height: 128px;
+    min-width: 128px;
+    min-height: 128px;
+    max-width: 128px;
+    max-height: 128px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.md-profile-image {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+    max-width: 64px;
+    max-height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.sm-profile-image {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+}

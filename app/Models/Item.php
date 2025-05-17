@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Item extends Model
@@ -14,8 +13,9 @@ class Item extends Model
         'title',
         'photo_img',
         'lost_date',
-        'category',
-        'loc_seen',
+        'category_id',
+        'item_type_id',
+        'location',
         'markings',
         'status',
         'bin',
@@ -24,17 +24,21 @@ class Item extends Model
         'received_by',
         'received_date',
         'user_id',
-        'postedby',
-        'location',
         'claimed_by'
+    ];
+
+    protected $casts = [
+        'lost_date' => 'date',
+        'issued_date' => 'date',
+        'received_date' => 'date',
     ];
 
     public function toSearchableArray()
     {
         return [
             'title' => $this->title,
-            'category' => $this->category,
-            // Add other fields you want to search
+            'category' => $this->category ? $this->category->name : null,
+            'item_type' => $this->itemType ? $this->itemType->name : null,
         ];
     }
 
@@ -43,14 +47,23 @@ class Item extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function itemType()
+    {
+        return $this->belongsTo(ItemType::class);
+    }
+
     public function histories()
     {
         return $this->hasMany(ItemHistory::class);
     }
 
-    // If you want to define an accessor for photo_img, you can use the following approach
     public function getPhotoImgAttribute($value)
     {
-        return $value ? $value : 'photo_img/question-mark.jpg'; 
+        return $value ?: 'photo_img/question-mark.jpg';
     }
 }
