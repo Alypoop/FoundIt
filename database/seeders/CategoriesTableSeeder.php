@@ -12,10 +12,9 @@ class CategoriesTableSeeder extends Seeder
         DB::table('categories')->insert([
             ['name' => 'School Supplies', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Electronics', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Accessories', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Clothing', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Miscellaneous', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Personal Accessories', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Personal Items', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Others', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

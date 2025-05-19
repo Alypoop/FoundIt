@@ -11,35 +11,28 @@ class ItemTypesTableSeeder extends Seeder
     {
         // School Supplies
         $this->createItemTypes('School Supplies', [
-            'Notebook', 'Pen', 'Pencil', 'Eraser', 'Ruler',
-            'Highlighter', 'Binder', 'Scissors'
+            'Notebook', 'Pen', 'Ruler', 'Highlighter', 'Scissors'
         ]);
 
         // Electronics
         $this->createItemTypes('Electronics', [
-            'Calculator', 'USB Flash Drive', 'Headphones', 'Charger',
-            'Mobile Phone', 'Tablet', 'Portable Electric Fan'
+            'Calculator', 'USB Flash Drive', 'Headphones',
+            'Charger', 'Mobile Phone', 'Portable Electric Fan'
         ]);
 
-        // Accessories
-        $this->createItemTypes('Accessories', [
-            'Eyewear', 'Watch', 'Wallet', 'Keys', 'ID Card', 'Hand Fan'
-        ]);
-
-        // Clothing
-        $this->createItemTypes('Clothing', [
-            'Jacket', 'Sweater', 'Hat', 'Mask'
-        ]);
-
-        // Miscellaneous
-        $this->createItemTypes('Miscellaneous', [
-            'Backpack', 'Water Bottle', 'Lunch Box', 
-            'Lunch Bag', 'Sports Equipment', 'Umbrella'
+        // Personal Accessories
+        $this->createItemTypes('Personal Accessories', [
+            'Eyewear', 'Watch', 'Jewelry', 'Hats'
         ]);
 
         // Personal Items
         $this->createItemTypes('Personal Items', [
-            'Cologne', 'Alcohol Bottle', 'Mirror'
+            'Cologne', 'Alcohol Bottle', 'Tumbler', 'Wallet', 'Keys', 'Bags'
+        ]);
+
+        // Others
+        $this->createItemTypes('Others', [
+            'None'
         ]);
     }
 

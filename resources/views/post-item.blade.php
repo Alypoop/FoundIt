@@ -51,13 +51,30 @@
                         @error('category')
                         <p class="m-0 small alert alert-danger shadow-sm">{{$message}}</p>
                         @enderror
-                        <select  id="category" name="category" class="form-control">
-                            <option>Select category</option>
-                            <option>Bag</option>
-                            <option>Wallet</option>
-                            <option>Make-up Essentials</option>
-                            <option>Electronic Devices</option>
-                            <option>Others</option>
+                        <select id="category" name="category_id" class="form-control" required>
+                            <option value="">Select category</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="item_type" class="form-label">Item Type:</label>
+                        @error('item_type_id')
+                        <p class="m-0 small alert alert-danger shadow-sm">{{$message}}</p>
+                        @enderror
+                        <select id="item_type" name="item_type_id" class="form-control" required>
+                            <option value="">Select category first</option>
+                            @if(old('category_id'))
+                                @foreach(ItemType::where('category_id', old('category_id'))->get() as $itemType)
+                                    <option value="{{ $itemType->id }}" {{ old('item_type_id') == $itemType->id ? 'selected' : '' }}>
+                                        {{ $itemType->name }}
+                                    </option>
+                                @endforeach
+                            @endif
                         </select>
                     </div>
                     
@@ -154,6 +171,67 @@
             const fileName = this.files[0] ? this.files[0].name : '';
             document.getElementById('file-name').textContent = fileName;
         });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.getElementById('category');
+        const itemTypeSelect = document.getElementById('item_type');
+
+        // Handle category change
+        categorySelect.addEventListener('change', function() {
+            const categoryId = this.value;
+            
+            // Reset item type select
+            itemTypeSelect.innerHTML = '<option value="">Loading...</option>';
+            itemTypeSelect.disabled = true;
+
+            if (!categoryId) {
+                itemTypeSelect.innerHTML = '<option value="">Select category first</option>';
+                itemTypeSelect.disabled = true;
+                return;
+            }
+
+            // Fetch item types
+            fetch(`/get-item-types?category_id=${categoryId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    itemTypeSelect.innerHTML = '<option value="">Select item type</option>';
+                    
+                    if (data.length === 0) {
+                        itemTypeSelect.innerHTML += '<option value="">No item types found</option>';
+                    } else {
+                        data.forEach(itemType => {
+                            itemTypeSelect.innerHTML += `
+                                <option value="${itemType.id}">${itemType.name}</option>
+                            `;
+                        });
+                    }
+                    
+                    itemTypeSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching item types:', error);
+                    itemTypeSelect.innerHTML = '<option value="">Error loading types</option>';
+                });
+        });
+
+        // If editing and category is already selected, load its item types
+        @if(old('category_id'))
+            // Trigger change event to load item types
+            categorySelect.dispatchEvent(new Event('change'));
+            
+            // After a short delay, set the selected item type
+            setTimeout(() => {
+                document.getElementById('item_type').value = "{{ old('item_type_id') }}";
+            }, 500);
+        @endif
+    });
     </script>
 
 

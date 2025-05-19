@@ -35,6 +35,16 @@ Route::post('/post-item', [ItemController::class, 'postItem'])->middleware(mustb
 // READ SPECIFIC LOST ITEM RECORD
 Route::get('/item/{item}', [ItemController::class, 'viewsingleItem'])->middleware(mustbeLoggedIn::Class);
 Route::delete('/item/{item}', [ItemController::class, 'deleteItem'])->middleware(mustbeLoggedIn::class);
+Route::get('/get-item-types', function(Request $request) {
+    if (!$request->category_id) {
+        return response()->json([]);
+    }
+    
+    return response()->json(
+        \App\Models\ItemType::where('category_id', $request->category_id)
+            ->get(['id', 'name'])
+    );
+})->name('item-types.index');
 
 // UPDATE SPECIFIC LOST ITEM RECORD
 Route::get('/item/{item}/edit', [ItemController::class, 'updateItem'])->middleware(mustbeLoggedIn::class);
@@ -66,7 +76,11 @@ Route::delete('/delete/{user}', [UserController::class, 'deleteUser'])->middlewa
 
 // SEARCH
 Route::get('/items/search', [ItemController::class, 'search'])->name('items.search');
-Route::post('/items/image-compare', [ItemController::class, 'compareWithImage'])->middleware(mustbeLoggedIn::class)->name('items.image.compare');
+Route::post('/items/search', [ItemController::class, 'search']); // For AJAX requests
+Route::post('/items/item-types', [ItemController::class, 'getItemTypes'])->name('items.item-types');
+Route::post('/items/image-compare', [ItemController::class, 'compareWithImage'])
+    ->middleware(mustbeLoggedIn::class)
+    ->name('items.image.compare');
 Route::get('/image-search', [ItemController::class, 'imageSearch']);
 Route::post('/run-image-search', [ItemController::class, 'compareWithImage'])->middleware(mustbeLoggedIn::class);
 Route::get('/items/compare/{id}', [ItemController::class, 'viewComparison'])->name('items.compare.view');

@@ -22,7 +22,7 @@
           <div class="container d-flex flex-column flex-md-row align-items-center p-3">
             <h4 class="my-0 mr-md-auto font-weight-normal"><a href="/" style="color:white">FoundIt</a></h4>
             <div class="flex-row my-3 my-md-0">
-              <a href="items/search" class="text-white mr-2 header-search-icon" title="Search" data-toggle="tooltip" data-placement="bottom"><i class="fas fa-search"></i></a>
+              <a href="/items/search" class="text-white mr-2 header-search-icon" title="Search" data-toggle="tooltip" data-placement="bottom"><i class="fas fa-search"></i></a>
               @can('view', auth()->user())
               <a href="/users" class="text-white mr-2 header-search-icon" title="Users" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-users" aria-hidden="true"></i></a>
               <a href="/itemhistory" class="text-white mr-2 header-search-icon" title="History Log" data-toggle="tooltip" data-placement="bottom"><i  class="bi bi-clipboard-minus-fill" aria-hidden="true"></i></a>
