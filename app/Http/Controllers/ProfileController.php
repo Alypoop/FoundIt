@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Drivers\Gd\Driver;
 
 class ProfileController extends Controller
 {
@@ -48,9 +47,10 @@ class ProfileController extends Controller
         if ($request->hasFile('profile')) {
             $filename = $user->id . "-" . uniqid() . ".jpg";
 
-            $manager = new ImageManager(new Driver()); // Instantiate ImageManager
-            $image = $manager->read($request->file('profile')->getRealPath()); // Read the uploaded image
-            $imgData = $image->cover(120, 120)->toJpeg(); // Resize and encode to jpg
+            $manager = new ImageManager(['driver' => 'gd']);
+            $image = $manager->make($request->file('profile')->getRealPath());
+            $imgData = (string) $image->fit(120, 120)->encode('jpg');
+
 
             // Store the image in the 'public' disk
             Storage::disk('public')->put('profiles/' . $filename, $imgData);

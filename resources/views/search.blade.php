@@ -144,46 +144,68 @@
     }
 
     function updateItemTypeFilters() {
-        const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(el => el.value);
-        
-        if (!selectedCategories.length) {
-            document.getElementById('itemTypeFilterContainer').style.display = 'none';
-            return;
-        }
-
-        fetch('{{ route("items.item-types") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ categories: selectedCategories })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const container = document.getElementById('itemTypeFilters');
-            container.innerHTML = '';
-            
-            if (data.itemTypes.length) {
-                container.style.display = 'block';
-                data.itemTypes.forEach(type => {
-                    container.innerHTML += `
-                        <div class="form-check mb-2">
-                            <input class="form-check-input item-type-filter" type="checkbox" 
-                                   name="item_type[]" value="${type.id}" id="item-type-${type.id}">
-                            <label class="form-check-label" for="item-type-${type.id}">
-                                ${type.name}
-                            </label>
-                        </div>
-                    `;
-                });
-                document.querySelectorAll('.item-type-filter').forEach(el => 
-                    el.addEventListener('change', debounce(loadSearchResults, 300)));
-            } else {
-                container.style.display = 'none';
-            }
-        });
+    const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(el => el.value);
+    
+    if (!selectedCategories.length) {
+        document.getElementById('itemTypeFilterContainer').style.display = 'none';
+        return;
     }
+
+    fetch('{{ route("items.item-types") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+            categories: selectedCategories 
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Received item types:', data); // Debug log
+        const container = document.getElementById('itemTypeFilters');
+        container.innerHTML = '';
+        
+        if (data.itemTypes && data.itemTypes.length) {
+            document.getElementById('itemTypeFilterContainer').style.display = 'block';
+            
+            data.itemTypes.forEach(type => {
+                const div = document.createElement('div');
+                div.className = 'form-check mb-2';
+                
+                const input = document.createElement('input');
+                input.className = 'form-check-input item-type-filter';
+                input.type = 'checkbox';
+                input.name = 'item_type[]';
+                input.value = type.id;
+                input.id = `item-type-${type.id}`;
+                input.onchange = debounce(loadSearchResults, 300);
+                
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.htmlFor = `item-type-${type.id}`;
+                label.textContent = type.name;
+                
+                div.appendChild(input);
+                div.appendChild(label);
+                container.appendChild(div);
+            });
+        } else {
+            document.getElementById('itemTypeFilterContainer').style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching item types:', error);
+        document.getElementById('itemTypeFilterContainer').style.display = 'none';
+    });
+}
 
     document.addEventListener('DOMContentLoaded', function() {
         const debouncedSearch = debounce(loadSearchResults, 300);

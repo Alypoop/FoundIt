@@ -227,16 +227,22 @@ public function updatedItem(Item $item, Request $request)
         return view('search', compact('items', 'categories', 'locations'));
     }
 
-    public function getItemTypes(Request $request)
-    {
-        $categoryIds = $request->input('categories', []);
-        
-        $itemTypes = ItemType::when($categoryIds, function($query) use ($categoryIds) {
-            $query->whereIn('category_id', $categoryIds);
-        })->get();
+ public function getItemTypes(Request $request)
+{
+    $request->validate([
+        'categories' => 'required|array',
+        'categories.*' => 'exists:categories,id'
+    ]);
 
-        return response()->json(['itemTypes' => $itemTypes]);
-    }
+    \Log::debug('Requested categories:', $request->categories);
+    
+    $itemTypes = ItemType::whereIn('category_id', $request->categories)
+        ->get(['id', 'name', 'category_id']);
+
+    \Log::debug('Returning item types:', $itemTypes->toArray());
+
+    return response()->json(['itemTypes' => $itemTypes]);
+}
 
     public function compareWithImage(Request $request)
     {

@@ -51,7 +51,9 @@
   
               <button type="submit" class="py-3 mt-4 btn btn-lg btn-master btn-block">Sign Up</button>
 
-              <div class="text-right mt-2">
+            </form>
+
+            <div class="text-right mt-2">
                 <a href="#" data-toggle="modal" data-target="#resendVerificationModal">Resend Verification Link</a>
               </div>
 
@@ -78,7 +80,6 @@
                   </form>
                 </div>
               </div>
-            </form>
           </div>
         </div>
       </div>
